@@ -1,0 +1,27 @@
+---
+
+- name: Create ipfs-cluster-service path
+  file:
+    state: directory
+    owner: ipfs
+    path: "{{ ipfs_base_dir}}/ipfs-cluster-service/"
+  
+- name: Configure environment for IPFS_CLUSTER_PATH
+  copy:
+    content: |
+      export IPFS_CLUSTER_PATH={{ ipfs_base_dir}}/ipfs-cluster-service/
+    dest: /etc/profile.d/ipfs-cluster-service.sh
+
+
+#- name: Enable and start ipfs-cluster-service
+#  systemd:
+#    name: ipfs-cluster-service
+#    state: started
+#    enabled: yes
+
+#- name: Configure ipfs
+#  copy:
+#    content: "{{ ipfs_config | to_nice_json }}"
+#    dest: "{{ ipfs_base_dir}}/ipfs/config"
+
+...

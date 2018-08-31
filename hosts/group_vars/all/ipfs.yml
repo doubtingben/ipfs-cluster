@@ -1,0 +1,58 @@
+---
+
+ipfs_cluster_ctl:
+  version: v0.5.0
+
+ipfs_cluster_service:
+  version: v0.5.0
+
+go_ipfs:
+  version: v0.4.17
+fs_repo_migrations:
+  version: v1.4.0
+
+ipfs:
+  services:
+    - name: ipfs
+      archive_path: go-ipfs
+      download: "https://dist.ipfs.io/go-ipfs/{{ go_ipfs.version }}/go-ipfs_{{ go_ipfs.version }}_linux-amd64.tar.gz"
+      version: "{{ go_ipfs.version }}"
+      systemdunit: |
+        [Unit]
+        Description=IPFS daemon
+        After=network.target
+
+        [Service]
+        Environment="IPFS_FD_MAX=4096"
+        Environment="IPFS_PATH={{ ipfs_base_dir}}/ipfs/"
+        ExecStart=/usr/local/bin/ipfs daemon --migrate
+        Restart=on-failure
+        User=ipfs
+
+        [Install]
+        WantedBy=multi-user.target
+    - name: ipfs-cluster-service
+      archive_path: ipfs-cluster-service
+      download: "https://dist.ipfs.io/ipfs-cluster-service/{{ ipfs_cluster_service.version }}/ipfs-cluster-service_{{ ipfs_cluster_service.version }}_linux-amd64.tar.gz"
+      version: "{{ ipfs_cluster_service.version }}"
+      systemdunit: |
+        [Unit]
+        Description=IPFS Cluster Service
+        After=network.target
+
+        [Service]
+        Environment="IPFS_CLUSTER_PATH={{ ipfs_base_dir}}/ipfs-cluster-service/"
+        ExecStart=/usr/local/bin/ipfs-cluster-service daemon --upgrade
+        Restart=on-failure
+        User=ipfs
+
+        [Install]
+        WantedBy=multi-user.target
+    - name: ipfs-cluster-ctl
+      archive_path: ipfs-cluster-ctl
+      download: "https://dist.ipfs.io/ipfs-cluster-ctl/{{ ipfs_cluster_ctl.version }}/ipfs-cluster-ctl_{{ ipfs_cluster_ctl.version }}_linux-amd64.tar.gz"
+      version: "{{ ipfs_cluster_ctl.version }}"
+    - name: fs-repo-migrations
+      version: "{{ fs_repo_migrations.version }}"
+      archive_path: fs-repo-migrations
+      download: "https://dist.ipfs.io/fs-repo-migrations/{{ fs_repo_migrations.version }}/fs-repo-migrations_{{ fs_repo_migrations.version }}_linux-amd64.tar.gz"

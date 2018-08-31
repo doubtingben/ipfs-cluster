@@ -1,0 +1,9 @@
+---
+
+- hosts: all
+
+  roles:
+    - ipfs
+    - ipfs-cluster
+
+...

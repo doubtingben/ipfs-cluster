@@ -1,0 +1,79 @@
+---
+
+- name: Create group
+  group:
+    name: ipfs
+    gid: 10001
+
+- name: Create user
+  user:
+    name: ipfs
+    group: ipfs
+    uid: 10001
+    shell: /bin/bash
+    home: "{{ ipfs_base_dir }}"
+
+- name: Mount data repo
+  mount:
+    src: /dev/sda
+    path: "{{ ipfs_base_dir }}"
+    fstype: ext4
+    state: mounted
+
+- name: Make download directories
+  file:
+    state: directory
+    path: /opt/downloads/{{ item.name }}/{{ item.version }}
+  with_items:
+    - "{{ ipfs.services }}"
+
+- name: Download binaries
+  unarchive:
+    src: " {{ item.download }}"
+    dest: /opt/downloads/{{ item.name }}/{{ item.version }}
+    remote_src: yes
+  with_items:
+    - "{{ ipfs.services }}"
+
+- name: Link binaries
+  file:
+    state: link
+    src: "/opt/downloads/{{ item.name }}/{{ item.version }}/{{ item.archive_path }}/{{ item.name }}"
+    dest: "/usr/local/bin/{{ item.name }}"
+  with_items:
+    - "{{ ipfs.services }}"
+
+- name: Configure environment for IPFSDATA
+  copy:
+    content: |
+      export IPFS_PATH={{ ipfs_base_dir}}/ipfs/
+    dest: /etc/profile.d/ipfs.sh
+
+- name: Init IPFS
+  become: yes
+  become_user: ipfs
+  shell: IPFS_PATH={{ ipfs_base_dir}}/ipfs/ ipfs init
+  args:
+    executable: /bin/bash
+    creates: "{{ ipfs_base_dir}}/ipfs/config"
+
+- name: Create service unit files
+  copy:
+    content: "{{ item.systemdunit }}"
+    dest: "/etc/systemd/system/{{ item.name }}.service"
+  with_items:
+    - "{{ ipfs.services }}"
+  when: item.systemdunit is defined
+
+- name: Enable and start ipfs
+  systemd:
+    name: ipfs
+    state: started
+    enabled: yes
+
+#- name: Configure ipfs
+#  copy:
+#    content: "{{ ipfs_config | to_nice_json }}"
+#    dest: "{{ ipfs_base_dir}}/ipfs/config"
+
+...

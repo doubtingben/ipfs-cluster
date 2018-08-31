@@ -1,0 +1,8 @@
+---
+
+- name: include role tasks
+  include_tasks: ipfs-cluster.yml
+  tags:
+    - ipfs-cluster
+
+...
